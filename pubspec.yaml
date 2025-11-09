@@ -69,21 +69,16 @@ dev_dependencies:
   flutter_test:
     sdk: flutter
   flutter_lints: ^5.0.0
+  flutter_launcher_icons: ^0.13.1
 
-flutter_icons:
-  android: true
-  ios: true
-  web:
-    image_path: "assets/icons/app_icon.png"
-  image_path: "assets/icons/app_icon.png"
 flutter_launcher_icons:
-  image_path: "assets/icons/app_icon.png"
   android: true
   ios: true
-  web: true
-  macos: true
-  windows: true
-  linux: true
+  image_path: "assets/icons/app_icon.png"
+  # Remove adaptive icon settings if you want a simple icon
+  # Or uncomment and adjust if you want adaptive icons for Android
+  # adaptive_icon_background: "#ffffff"
+  # adaptive_icon_foreground: "assets/icons/app_icon.png"
 
 flutter:
   uses-material-design: true

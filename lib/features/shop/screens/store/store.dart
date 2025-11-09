@@ -12,7 +12,6 @@ import 'package:get/get.dart';
 
 import '../../../../common/widgets/appbar/appbar.dart';
 import '../../../../utils/constants/colors.dart';
-import '../../models/statut_etablissement_model.dart';
 
 class StoreScreen extends StatefulWidget {
   const StoreScreen({super.key});
@@ -27,12 +26,21 @@ class _StoreScreenState extends State<StoreScreen> {
   @override
   void initState() {
     super.initState();
-    // S'assurer de charger tous les établissements au chargement de la page Store
-    // pour afficher tous les établissements approuvés, peu importe le rôle
-    // La page Store doit toujours afficher TOUS les établissements approuvés
+    // Charger immédiatement tous les établissements approuvés pour le Store
+    // Cette méthode charge indépendamment du rôle de l'utilisateur
     WidgetsBinding.instance.addPostFrameCallback((_) {
-      etablissementController.getTousEtablissements();
+      _loadStoreEtablissements();
     });
+  }
+
+  Future<void> _loadStoreEtablissements() async {
+    try {
+      // Utiliser la méthode spécifique pour le Store qui charge tous les établissements approuvés
+      // Cette méthode remplace complètement la liste avec tous les établissements approuvés
+      await etablissementController.getApprovedEtablissementsForStore();
+    } catch (e) {
+      print('Erreur chargement établissements Store: $e');
+    }
   }
 
   @override
@@ -51,35 +59,42 @@ class _StoreScreenState extends State<StoreScreen> {
           )
         ],
       ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.all(AppSizes.defaultSpace),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            /// -- Établissements approuvés
-            TSectionHeading(
-              title: 'Nos partenaires',
-              onPressed: () => Get.to(() => const AllBrandsScreen()),
-            ),
-            const SizedBox(
-              height: AppSizes.spaceBtwItems,
-            ),
+      body: RefreshIndicator(
+        onRefresh: _loadStoreEtablissements,
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(AppSizes.defaultSpace),
+          physics: const AlwaysScrollableScrollPhysics(),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              /// -- Établissements approuvés
+              TSectionHeading(
+                title: 'Nos partenaires',
+                onPressed: () => Get.to(() => const AllBrandsScreen()),
+              ),
+              const SizedBox(
+                height: AppSizes.spaceBtwItems,
+              ),
 
             /// -- Grid des établissements approuvés
             Obx(() {
+              // Afficher le shimmer pendant le chargement
               if (etablissementController.isLoading.value) {
                 return const TbrandsShimmer();
               }
 
-              final approved = etablissementController.etablissements
-                  .where((e) => e.statut == StatutEtablissement.approuve)
-                  .toList();
+              // La liste etablissements contient déjà uniquement les établissements approuvés
+              // car getApprovedEtablissementsForStore() les filtre déjà
+              final approved = etablissementController.etablissements.toList();
 
               if (approved.isEmpty) {
                 return Center(
-                  child: Text(
-                    'Aucun établissement approuvé',
-                    style: Theme.of(context).textTheme.bodyMedium,
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSizes.defaultSpace),
+                    child: Text(
+                      'Aucun établissement approuvé',
+                      style: Theme.of(context).textTheme.bodyMedium,
+                    ),
                   ),
                 );
               }
@@ -106,7 +121,8 @@ class _StoreScreenState extends State<StoreScreen> {
                 },
               );
             }),
-          ],
+            ],
+          ),
         ),
       ),
     );
