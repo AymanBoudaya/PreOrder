@@ -137,8 +137,11 @@ class BannerController extends GetxController {
       await fetchAllBanners();
       
       clearForm();
-      TLoaders.successSnackBar(message: 'Bannière ajoutée avec succès');
-      Get.back();
+      Get.back(); // Fermer l'écran
+      TLoaders.successSnackBar(
+        title: 'Succès',
+        message: 'Bannière ajoutée avec succès',
+      );
     } catch (e) {
       TLoaders.errorSnackBar(message: 'Erreur lors de l\'ajout de la bannière: $e');
     } finally {
@@ -182,8 +185,11 @@ class BannerController extends GetxController {
       await fetchAllBanners();
       
       clearForm();
-      TLoaders.successSnackBar(message: 'Bannière mise à jour avec succès');
-      Get.back();
+      Get.back(); // Fermer l'écran
+      TLoaders.successSnackBar(
+        title: 'Succès',
+        message: 'Bannière mise à jour avec succès',
+      );
     } catch (e) {
       TLoaders.errorSnackBar(message: 'Erreur lors de la mise à jour de la bannière: $e');
     } finally {
@@ -208,7 +214,11 @@ class BannerController extends GetxController {
       await _bannerRepository.deleteBanner(bannerId);
       await fetchAllBanners();
       
-      TLoaders.successSnackBar(message: 'Bannière supprimée avec succès');
+      // Afficher le snackbar de succès
+      TLoaders.successSnackBar(
+        title: 'Succès',
+        message: 'Bannière supprimée avec succès',
+      );
     } catch (e) {
       TLoaders.errorSnackBar(message: 'Erreur lors de la suppression de la bannière: $e');
     } finally {

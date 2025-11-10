@@ -392,9 +392,10 @@ class BannerManagementScreen extends StatelessWidget {
             ),
           ),
           ElevatedButton(
-            onPressed: () {
-              Get.back();
-              controller.deleteBanner(banner.id);
+            onPressed: () async {
+              Get.back(); // Fermer le dialog de confirmation
+              await controller.deleteBanner(banner.id);
+              // Le snackbar de succès sera affiché par le contrôleur
             },
             style: ElevatedButton.styleFrom(
               backgroundColor: Colors.red.shade600,
