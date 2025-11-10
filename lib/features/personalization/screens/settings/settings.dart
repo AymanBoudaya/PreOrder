@@ -155,24 +155,21 @@ class SettingsScreen extends StatelessWidget {
                       onTap: () => Get.to(() => const GerantDashboardScreen()),
                     ),
 
-                  if (isAdminGerant())
+                  if (userController.user.value.role == 'Gérant')
                     TSettingsMenuTile(
                       icon: Iconsax.category,
                       title: "Gérer commandes",
                       subTitle:
                           "Consulter, ajouter, modifier ou supprimer une catégorie",
                       onTap: () async {
-                        final role = userController.user.value.role;
-                        if (role == 'Gérant') {
-                          final etab = await EtablissementController.instance
-                              .getEtablissementUtilisateurConnecte();
-                          if (etab == null ||
-                              etab.statut != StatutEtablissement.approuve) {
-                            TLoaders.errorSnackBar(
-                                message:
-                                    'Accès désactivé tant que votre établissement n\'est pas approuvé.');
-                            return;
-                          }
+                        final etab = await EtablissementController.instance
+                            .getEtablissementUtilisateurConnecte();
+                        if (etab == null ||
+                            etab.statut != StatutEtablissement.approuve) {
+                          TLoaders.errorSnackBar(
+                              message:
+                                  'Accès désactivé tant que votre établissement n\'est pas approuvé.');
+                          return;
                         }
                         final result =
                             await Get.to(() => GerantOrderManagementScreen());

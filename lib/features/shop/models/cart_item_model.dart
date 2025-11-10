@@ -11,6 +11,7 @@ class CartItemModel {
   Map<String, String>? selectedVariation;
   String etablissementId;
   ProduitModel? product;
+  String categoryId; // Ajout du categoryId pour faciliter l'affichage
 
   CartItemModel({
     required this.productId,
@@ -23,6 +24,7 @@ class CartItemModel {
     this.selectedVariation = const {'id': '', 'taille': '', 'prix': '0.0'},
     this.etablissementId = '',
     this.product,
+    this.categoryId = '',
   });
 
   static CartItemModel empty() {
@@ -41,6 +43,7 @@ class CartItemModel {
       'selectedVariation':
           selectedVariation ?? {'id': '', 'taille': '', 'prix': '0.0'},
       'etablissementId': etablissementId,
+      'categoryId': categoryId,
     };
   }
 
@@ -57,6 +60,7 @@ class CartItemModel {
           ? Map<String, String>.from(data['selectedVariation'])
           : null,
       etablissementId: data['etablissementId'] ?? '',
+      categoryId: data['categoryId'] ?? '',
     );
   }
   CartItemModel copyWith({
@@ -70,6 +74,7 @@ class CartItemModel {
     Map<String, String>? selectedVariation,
     String? etablissementId,
     ProduitModel? product,
+    String? categoryId,
   }) {
     return CartItemModel(
       productId: productId ?? this.productId,
@@ -82,6 +87,7 @@ class CartItemModel {
       selectedVariation: selectedVariation ?? this.selectedVariation,
       etablissementId: etablissementId ?? this.etablissementId,
       product: product ?? this.product,
+      categoryId: categoryId ?? this.categoryId,
     );
   }
 }

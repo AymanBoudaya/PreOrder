@@ -295,6 +295,7 @@ class CartController extends GetxController {
       selectedVariation: variationData,
       etablissementId: product.etablissementId,
       product: product,
+      categoryId: product.categoryId, // Stocker le categoryId
     );
   }
 

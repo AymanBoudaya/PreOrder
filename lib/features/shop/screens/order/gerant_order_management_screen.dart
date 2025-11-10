@@ -10,8 +10,10 @@ import '../../../../utils/constants/sizes.dart';
 import '../../../../utils/helpers/helper_functions.dart';
 import '../../../../utils/popups/loaders.dart';
 import '../../../personalization/controllers/user_controller.dart';
+import '../../controllers/category_controller.dart';
 import '../../controllers/etablissement_controller.dart';
 import '../../controllers/product/order_controller.dart';
+import '../../controllers/product/produit_controller.dart';
 import '../../models/order_model.dart';
 
 class GerantOrderManagementScreen extends StatefulWidget {
@@ -29,6 +31,8 @@ class _GerantOrderManagementScreenState
   final UserController userController = Get.find<UserController>();
   final EtablissementController etablissementController =
       EtablissementController.instance;
+  final CategoryController categoryController = CategoryController.instance;
+  final ProduitController produitController = ProduitController.instance;
 
   String? _currentEtablissementId;
 
@@ -46,6 +50,10 @@ class _GerantOrderManagementScreenState
   void initState() {
     super.initState();
     _tabController = TabController(length: _tabLabels.length, vsync: this);
+    // S'assurer que les catégories sont chargées
+    if (categoryController.allCategories.isEmpty) {
+      categoryController.fetchCategories();
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       _loadGerantOrders();
     });
@@ -619,58 +627,95 @@ class _GerantOrderManagementScreenState
             ],
           ),
           const SizedBox(height: 4),
+          // Utiliser Obx pour réagir aux changements de catégories
           ...displayItems.map((item) {
-            // Extraire la taille de la variation si elle existe
-            String? taille;
-            if (item.selectedVariation != null) {
-              taille = item.selectedVariation!['taille'] ?? 
-                       item.selectedVariation!['size'] ?? 
-                       (item.variationId.isNotEmpty ? item.variationId : null);
-            } else if (item.variationId.isNotEmpty) {
-              taille = item.variationId;
-            }
+            return Obx(() {
+              // Extraire la taille de la variation si elle existe
+              String? taille;
+              if (item.selectedVariation != null) {
+                taille = item.selectedVariation!['taille'] ?? 
+                         item.selectedVariation!['size'] ?? 
+                         (item.variationId.isNotEmpty ? item.variationId : null);
+              } else if (item.variationId.isNotEmpty) {
+                taille = item.variationId;
+              }
 
-            // Construire le texte avec ou sans taille
-            String itemText = '${item.quantity}x ${item.title}';
-            if (taille != null && taille.isNotEmpty) {
-              itemText += ' ($taille)';
-            }
+              // Obtenir le nom de la catégorie
+              String categoryName = '';
+              // Utiliser categoryId depuis item si disponible, sinon depuis product
+              String? categoryIdToUse = item.categoryId.isNotEmpty 
+                  ? item.categoryId 
+                  : (item.product != null && item.product!.categoryId.isNotEmpty 
+                      ? item.product!.categoryId 
+                      : null);
+              
+              // Si categoryId n'est pas disponible, essayer de le récupérer depuis ProduitController
+              if ((categoryIdToUse == null || categoryIdToUse.isEmpty) && item.productId.isNotEmpty) {
+                try {
+                  final product = produitController.getProductById(item.productId);
+                  if (product != null && product.categoryId.isNotEmpty) {
+                    categoryIdToUse = product.categoryId;
+                  }
+                } catch (e) {
+                  // Ignorer l'erreur, categoryIdToUse reste null
+                }
+              }
+              
+              if (categoryIdToUse != null && categoryIdToUse.isNotEmpty) {
+                try {
+                  final category = categoryController.allCategories
+                      .firstWhereOrNull((cat) => cat.id == categoryIdToUse);
+                  categoryName = category?.name ?? '';
+                } catch (e) {
+                  categoryName = '';
+                }
+              }
 
-            return Padding(
-              padding: const EdgeInsets.only(bottom: 2),
-              child: Row(
-                children: [
-                  Container(
-                    width: 4,
-                    height: 4,
-                    decoration: BoxDecoration(
-                      color: AppColors.primary,
-                      shape: BoxShape.circle,
+              // Construire le texte avec quantité, nom, catégorie et taille
+              String itemText = '${item.quantity}x ${item.title}';
+              if (categoryName.isNotEmpty) {
+                itemText += ' : $categoryName';
+              }
+              if (taille != null && taille.isNotEmpty) {
+                itemText += ' ($taille)';
+              }
+
+              return Padding(
+                padding: const EdgeInsets.only(bottom: 2),
+                child: Row(
+                  children: [
+                    Container(
+                      width: 4,
+                      height: 4,
+                      decoration: BoxDecoration(
+                        color: AppColors.primary,
+                        shape: BoxShape.circle,
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  Expanded(
-                    child: Text(
-                      itemText,
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        itemText,
+                        style: TextStyle(
+                          fontSize: 11,
+                          color: Colors.grey.shade800,
+                        ),
+                        overflow: TextOverflow.ellipsis,
+                        maxLines: 1,
+                      ),
+                    ),
+                    Text(
+                      '${(item.price * item.quantity).toStringAsFixed(2)} DT',
                       style: TextStyle(
                         fontSize: 11,
+                        fontWeight: FontWeight.w600,
                         color: Colors.grey.shade800,
                       ),
-                      overflow: TextOverflow.ellipsis,
-                      maxLines: 1,
                     ),
-                  ),
-                  Text(
-                    '${(item.price * item.quantity).toStringAsFixed(2)} DT',
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w600,
-                      color: Colors.grey.shade800,
-                    ),
-                  ),
-                ],
-              ),
-            );
+                  ],
+                ),
+              );
+            });
           }),
           if (remainingCount > 0)
             Padding(
