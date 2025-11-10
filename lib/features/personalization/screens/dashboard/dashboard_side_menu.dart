@@ -11,6 +11,7 @@ import '../../controllers/user_controller.dart';
 import '../categories/category_manager_screen.dart';
 import '../brands/mon_etablissement_screen.dart';
 import '../users/admin_user_management_screen.dart';
+import '../banners/banner_management_screen.dart';
 import '../../../../utils/popups/loaders.dart';
 import '../../../shop/models/statut_etablissement_model.dart';
 import 'admin_dashboard_screen.dart';
@@ -151,6 +152,19 @@ class DashboardSideMenu extends StatelessWidget {
                     isSelected: currentRoute == 'users',
                     onTap: () {
                       Get.to(() => const AdminUserManagementScreen());
+                    },
+                    dark: dark,
+                  ),
+
+                // Gérer bannières (Admin seulement)
+                if (isAdmin)
+                  _buildMenuItem(
+                    context: context,
+                    icon: Iconsax.picture_frame,
+                    title: 'Gérer bannières',
+                    isSelected: currentRoute == 'banners',
+                    onTap: () {
+                      Get.to(() => const BannerManagementScreen());
                     },
                     dark: dark,
                   ),

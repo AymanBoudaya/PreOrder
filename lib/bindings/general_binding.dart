@@ -4,6 +4,7 @@ import 'package:caferesto/features/shop/controllers/product/order_controller.dar
 import 'package:get/get.dart';
 
 import '../data/repositories/address/address_repository.dart';
+import '../data/repositories/banner/banner_repository.dart';
 import '../data/repositories/etablissement/etablissement_repository.dart';
 import '../data/repositories/order/order_repository.dart';
 import '../data/repositories/product/produit_repository.dart';
@@ -17,6 +18,7 @@ import '../features/shop/controllers/product/favorites_controller.dart';
 import '../features/shop/controllers/product/share_controller.dart';
 import '../features/shop/controllers/product/variation_controller.dart';
 import '../features/shop/controllers/product/panier_controller.dart';
+import '../features/shop/controllers/banner_controller.dart';
 import '../utils/helpers/network_manager.dart';
 
 class GeneralBinding extends Bindings {
@@ -28,6 +30,7 @@ class GeneralBinding extends Bindings {
     Get.lazyPut<EtablissementRepository>(() => EtablissementRepository(), fenix: true);
     Get.lazyPut<OrderRepository>(() => OrderRepository(), fenix: true);
     Get.lazyPut<AddressRepository>(() => AddressRepository(), fenix: true);
+    Get.lazyPut<BannerRepository>(() => BannerRepository(), fenix: true);
 
     // UserController doit être créé avant OrderController car OrderController en dépend
     Get.lazyPut<UserController>(() => UserController(), fenix: true);
@@ -49,5 +52,6 @@ class GeneralBinding extends Bindings {
     Get.lazyPut<EtablissementController>(
         () => EtablissementController(Get.find<EtablissementRepository>()),
         fenix: true);
+    Get.lazyPut<BannerController>(() => BannerController(), fenix: true);
   }
 }

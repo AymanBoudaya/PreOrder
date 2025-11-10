@@ -7,11 +7,11 @@ import 'package:flutter/material.dart';
 import '../../../../common/widgets/layouts/grid_layout.dart';
 import '../../../../common/widgets/shimmer/vertical_product_shimmer.dart';
 import '../../../../common/widgets/texts/section_heading.dart';
-import '../../../../utils/constants/image_strings.dart';
 import '../../../../utils/constants/sizes.dart';
 import '../../../../common/widgets/custom_shapes/containers/primary_header_container.dart';
 import '../../../authentication/screens/home/widgets/home_categories.dart';
 import '../../controllers/product/produit_controller.dart';
+import '../../controllers/banner_controller.dart';
 import '../all_products/all_products.dart';
 import '../categories/all_categories.dart';
 import 'widgets/home_appbar.dart';
@@ -23,6 +23,7 @@ class HomeScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final controller = Get.put(ProduitController());
+    final bannerController = Get.put(BannerController());
     final screenWidth = MediaQuery.of(context).size.width;
     final screenHeight = MediaQuery.of(context).size.height;
 
@@ -62,17 +63,34 @@ class HomeScreen extends StatelessWidget {
               ),
               child: Column(
                 children: [
-                  /// -- PromoSlider avec hauteur responsive
-                  TPromoSlider(
-                    banners: const [
-                      TImages.promoBanner1,
-                      TImages.promoBanner2,
-                      TImages.promoBanner3
-                    ],
-                    height: TDeviceUtils.getPromoSliderHeight(
-                        screenWidth, screenHeight),
-                    autoPlay: true,
-                    autoPlayInterval: 5000,
+                  /// -- PromoSlider avec hauteur responsive - Charger les bannières depuis la DB
+                  FutureBuilder(
+                    future: bannerController.getFeaturedBanners(),
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return SizedBox(
+                          height: TDeviceUtils.getPromoSliderHeight(
+                              screenWidth, screenHeight),
+                          child: const Center(
+                            child: CircularProgressIndicator(),
+                          ),
+                        );
+                      }
+
+                      if (snapshot.hasError || !snapshot.hasData || snapshot.data!.isEmpty) {
+                        // Si pas de bannières, ne rien afficher ou afficher un message
+                        return const SizedBox.shrink();
+                      }
+
+                      final banners = snapshot.data!;
+                      return TPromoSlider(
+                        banners: banners,
+                        height: TDeviceUtils.getPromoSliderHeight(
+                            screenWidth, screenHeight),
+                        autoPlay: true,
+                        autoPlayInterval: 5000,
+                      );
+                    },
                   ),
                   const SizedBox(height: AppSizes.spaceBtwSections),
 

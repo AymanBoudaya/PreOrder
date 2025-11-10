@@ -22,6 +22,7 @@ import '../brands/mon_etablissement_screen.dart';
 import '../categories/category_manager_screen.dart';
 import '../dashboard/admin_dashboard_screen.dart';
 import '../dashboard/gerant_dashboard_screen.dart';
+import '../banners/banner_management_screen.dart';
 import '../../../shop/controllers/etablissement_controller.dart';
 import '../../../../utils/popups/loaders.dart';
 import '../../../shop/models/statut_etablissement_model.dart';
@@ -189,6 +190,20 @@ class SettingsScreen extends StatelessWidget {
                             await Get.to(() => CategoryManagementPage());
                         if (result == true) {
                           // Le formulaire a été réinitialisé
+                          print("Écran fermé et formulaire réinitialisé");
+                        }
+                      },
+                    ),
+                  if (isAdminOnly())
+                    TSettingsMenuTile(
+                      icon: Iconsax.picture_frame,
+                      title: "Gérer bannières",
+                      subTitle:
+                          "Consulter, ajouter, modifier ou supprimer des bannières",
+                      onTap: () async {
+                        final result =
+                            await Get.to(() => const BannerManagementScreen());
+                        if (result == true) {
                           print("Écran fermé et formulaire réinitialisé");
                         }
                       },
