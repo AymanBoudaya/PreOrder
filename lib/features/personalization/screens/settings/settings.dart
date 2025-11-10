@@ -31,8 +31,7 @@ class SettingsScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Use instance getter which has fallback to create if not found
-    final userController = UserController.instance;
+    final userController = Get.put(UserController());
 
     bool isAdminOnly() {
       final role = userController.user.value.role;
@@ -133,17 +132,6 @@ class SettingsScreen extends StatelessWidget {
                   //     icon: Iconsax.security_card,
                   //     onTap: () {}),
 
-                  /// Paramètres de l'app
-                  SizedBox(height: AppSizes.spaceBtwSections),
-                  TSectionHeading(title: "Paramètres", showActionButton: false),
-                  SizedBox(height: AppSizes.spaceBtwItems),
-                  TSettingsMenuTile(
-                      icon: Iconsax.location,
-                      title: "Géolocalisation",
-                      subTitle:
-                          "Définir une recommandation à partir de ma position",
-                      trailing: Switch(value: true, onChanged: (value) {})),
-
                   /// Développeur , upload
                   if (isAdminGerant()) ...[
                     SizedBox(height: AppSizes.spaceBtwSections),
@@ -167,22 +155,24 @@ class SettingsScreen extends StatelessWidget {
                       onTap: () => Get.to(() => const GerantDashboardScreen()),
                     ),
 
-                  // Gérer commandes (Gérant seulement, pas Admin)
-                  if (userController.user.value.role == 'Gérant')
+                  if (isAdminGerant())
                     TSettingsMenuTile(
                       icon: Iconsax.category,
                       title: "Gérer commandes",
                       subTitle:
                           "Consulter, ajouter, modifier ou supprimer une catégorie",
                       onTap: () async {
-                        final etab = await EtablissementController.instance
-                            .getEtablissementUtilisateurConnecte();
-                        if (etab == null ||
-                            etab.statut != StatutEtablissement.approuve) {
-                          TLoaders.errorSnackBar(
-                              message:
-                                  'Accès désactivé tant que votre établissement n\'est pas approuvé.');
-                          return;
+                        final role = userController.user.value.role;
+                        if (role == 'Gérant') {
+                          final etab = await EtablissementController.instance
+                              .getEtablissementUtilisateurConnecte();
+                          if (etab == null ||
+                              etab.statut != StatutEtablissement.approuve) {
+                            TLoaders.errorSnackBar(
+                                message:
+                                    'Accès désactivé tant que votre établissement n\'est pas approuvé.');
+                            return;
+                          }
                         }
                         final result =
                             await Get.to(() => GerantOrderManagementScreen());

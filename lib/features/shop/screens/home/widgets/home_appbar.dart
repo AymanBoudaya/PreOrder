@@ -47,10 +47,8 @@ class THomeAppBar extends StatelessWidget {
           icon: const Icon(Iconsax.search_normal_1, color: Colors.white),
           onPressed: () {
             Get.to(() => const SearchOverlay(),
-                transition: Transition.fadeIn,
-                duration: const Duration(milliseconds: 300),
-                opaque: false,
-                routeName: '/search');
+                transition: Transition.rightToLeft,
+                duration: const Duration(milliseconds: 300));
           },
         ),
         TCartCounterIcon(

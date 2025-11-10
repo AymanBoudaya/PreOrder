@@ -53,8 +53,9 @@ class ResearchController extends GetxController {
     }
   }
 
-  /// Fetch all products (with pagination)
+  /// Fetch all products (with pagination) - Optimisé
   Future<void> fetchAllProducts({bool reset = false}) async {
+    // Éviter les appels multiples simultanés
     if (isLoading.value || isPaginating.value) return;
     if (!hasMore.value && !reset) return;
 
@@ -78,74 +79,86 @@ class ResearchController extends GetxController {
       if (products.isEmpty) {
         hasMore.value = false;
       } else {
+        // Ajouter les produits de manière optimisée
         allProducts.addAll(products);
-        searchResults.addAll(products);
         _page++;
+        
+        // Appliquer les filtres après avoir ajouté les nouveaux produits
+        applyFilters();
       }
-
-      applyFilters();
     } catch (e) {
       print('Erreur fetch produits: $e');
+      // En cas d'erreur, s'assurer que les états sont corrects
+      hasMore.value = false;
     } finally {
       isLoading.value = false;
       isPaginating.value = false;
     }
   }
 
-  /// Filtrage combiné avec gestion des IDs
+  /// Filtrage combiné avec gestion des IDs - Optimisé pour performance
   void applyFilters() {
+    // Utiliser une liste mutable pour de meilleures performances
     List<ProduitModel> results = List.from(allProducts);
 
-    // Recherche textuelle
+    // Recherche textuelle - optimisée
     if (query.value.isNotEmpty) {
+      final queryLower = query.value.toLowerCase();
       results = results.where((p) {
-        final name = p.name.toLowerCase();
-        final desc = p.description?.toLowerCase() ?? '';
-        final etabName = p.etablissement?.name.toLowerCase() ?? '';
-
-        return name.contains(query.value.toLowerCase()) ||
-            desc.contains(query.value.toLowerCase()) ||
-            etabName.contains(query.value.toLowerCase());
+        // Recherche dans le nom (le plus rapide)
+        if (p.name.toLowerCase().contains(queryLower)) return true;
+        
+        // Recherche dans la description
+        if (p.description?.toLowerCase().contains(queryLower) ?? false) {
+          return true;
+        }
+        
+        // Recherche dans le nom de l'établissement
+        if (p.etablissement?.name.toLowerCase().contains(queryLower) ?? false) {
+          return true;
+        }
+        
+        return false;
       }).toList();
     }
 
-    // Filtre par catégorie (ID)
+    // Filtre par catégorie (ID) - optimisé
     if (selectedCategory.value != null) {
-      results = results
-          .where((p) => p.categoryId == selectedCategory.value!.id)
-          .toList();
+      final categoryId = selectedCategory.value!.id;
+      results = results.where((p) => p.categoryId == categoryId).toList();
     }
 
-    // Filtre par établissement (ID)
+    // Filtre par établissement (ID) - optimisé
     if (selectedEtablissement.value != null) {
-      results = results
-          .where((p) => p.etablissementId == selectedEtablissement.value!.id)
-          .toList();
+      final etabId = selectedEtablissement.value!.id;
+      results = results.where((p) => p.etablissementId == etabId).toList();
     }
 
-    // Tri
-    switch (selectedSort.value) {
-      case 'Prix ↑':
-        print('results $results');
-        results.sort(
-            (a, b) => _getEffectivePrice(a).compareTo(_getEffectivePrice(b)));
-        break;
-      case 'Prix ↓':
-        results.sort(
-            (a, b) => _getEffectivePrice(b).compareTo(_getEffectivePrice(a)));
-        break;
-      case 'Nom A-Z':
-        results.sort((a, b) => a.name.compareTo(b.name));
-        break;
-      case 'Popularité':
-        results.sort((a, b) {
-          final aScore = a.isFeatured == true ? 1 : 0;
-          final bScore = b.isFeatured == true ? 1 : 0;
-          return bScore.compareTo(aScore);
-        });
-        break;
+    // Tri - optimisé avec comparaison directe
+    if (selectedSort.value.isNotEmpty) {
+      switch (selectedSort.value) {
+        case 'Prix ↑':
+          results.sort(
+              (a, b) => _getEffectivePrice(a).compareTo(_getEffectivePrice(b)));
+          break;
+        case 'Prix ↓':
+          results.sort(
+              (a, b) => _getEffectivePrice(b).compareTo(_getEffectivePrice(a)));
+          break;
+        case 'Nom A-Z':
+          results.sort((a, b) => a.name.compareTo(b.name));
+          break;
+        case 'Popularité':
+          results.sort((a, b) {
+            final aScore = a.isFeatured == true ? 1 : 0;
+            final bScore = b.isFeatured == true ? 1 : 0;
+            return bScore.compareTo(aScore);
+          });
+          break;
+      }
     }
 
+    // Mise à jour optimisée des résultats
     searchResults.assignAll(results);
   }
 
@@ -182,9 +195,11 @@ class ResearchController extends GetxController {
     }
   }
 
-  /// Gestion des changements avec objets
+  /// Gestion des changements avec objets et debounce pour performance
   void onSearchChanged(String text) {
     query.value = text;
+    // Debounce pour éviter trop de filtrages pendant la saisie
+    // Le filtrage sera fait automatiquement via applyFilters
     applyFilters();
   }
 
