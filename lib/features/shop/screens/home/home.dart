@@ -13,6 +13,7 @@ import '../../../../common/widgets/custom_shapes/containers/primary_header_conta
 import '../../../authentication/screens/home/widgets/home_categories.dart';
 import '../../controllers/product/produit_controller.dart';
 import '../all_products/all_products.dart';
+import '../categories/all_categories.dart';
 import 'widgets/home_appbar.dart';
 import 'widgets/promo_slider.dart';
 
@@ -42,7 +43,8 @@ class HomeScreen extends StatelessWidget {
                       title: 'Catégories Populaires',
                       padding: EdgeInsets.all(0),
                       showActionButton: true,
-                      whiteTextColor: true),
+                      whiteTextColor: true,
+                      onPressed: () => Get.to(() => const AllCategoriesScreen())),
                   const SizedBox(height: AppSizes.spaceBtwItems),
 
                   /// Categories List
