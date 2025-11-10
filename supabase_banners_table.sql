@@ -68,8 +68,63 @@ CREATE POLICY "Only admins can delete banners"
     )
   );
 
--- Créer le bucket de stockage pour les bannières (à exécuter dans Supabase Storage)
--- Vous pouvez créer ce bucket manuellement dans l'interface Supabase Storage
--- Nom du bucket: 'banners'
--- Public: true
+-- ============================================
+-- CRÉATION DU BUCKET STORAGE (à exécuter dans l'éditeur SQL Supabase)
+-- ============================================
+-- Note: La création de bucket via SQL nécessite des permissions admin
+-- Méthode recommandée: Créer le bucket via l'interface Supabase Storage
+
+-- Créer le bucket "banners" (si vous avez les permissions)
+INSERT INTO storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+VALUES (
+  'banners', 
+  'banners', 
+  true, 
+  5242880, -- 5MB en bytes
+  ARRAY['image/jpeg', 'image/png', 'image/webp', 'image/jpg']
+)
+ON CONFLICT (id) DO NOTHING;
+
+-- Politiques RLS pour le bucket "banners"
+
+-- Politique pour la lecture publique (tous les utilisateurs peuvent lire)
+CREATE POLICY "Public can view banners"
+ON storage.objects FOR SELECT
+USING (bucket_id = 'banners');
+
+-- Politique pour l'insertion (seulement les admins)
+CREATE POLICY "Only admins can upload banners"
+ON storage.objects FOR INSERT
+WITH CHECK (
+  bucket_id = 'banners' AND
+  auth.role() = 'authenticated' AND
+  EXISTS (
+    SELECT 1 FROM users
+    WHERE users.id = auth.uid() AND users.role = 'Admin'
+  )
+);
+
+-- Politique pour la mise à jour (seulement les admins)
+CREATE POLICY "Only admins can update banners"
+ON storage.objects FOR UPDATE
+USING (
+  bucket_id = 'banners' AND
+  auth.role() = 'authenticated' AND
+  EXISTS (
+    SELECT 1 FROM users
+    WHERE users.id = auth.uid() AND users.role = 'Admin'
+  )
+);
+
+-- Politique pour la suppression (seulement les admins)
+CREATE POLICY "Only admins can delete banners"
+ON storage.objects FOR DELETE
+USING (
+  bucket_id = 'banners' AND
+  auth.role() = 'authenticated' AND
+  EXISTS (
+    SELECT 1 FROM users
+    WHERE users.id = auth.uid() AND users.role = 'Admin'
+  )
+);
 

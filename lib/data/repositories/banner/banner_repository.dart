@@ -101,10 +101,11 @@ class BannerRepository extends GetxController {
   Future<String> uploadBannerImage(dynamic file, {bool isMobile = false}) async {
     try {
       final fileName = 'banner_${DateTime.now().millisecondsSinceEpoch}.${isMobile ? 'jpg' : 'png'}';
+      Uint8List bytes;
 
+      // Convertir le fichier en bytes selon la plateforme
       if (kIsWeb) {
         // Web → XFile ou Uint8List
-        Uint8List bytes;
         if (file is XFile) {
           bytes = await file.readAsBytes();
         } else if (file is Uint8List) {
@@ -112,35 +113,49 @@ class BannerRepository extends GetxController {
         } else {
           throw 'Type de fichier non supporté pour l\'upload web';
         }
-        await _db.storage.from(_bucket).uploadBinary(
-          fileName,
-          bytes,
-          fileOptions: const FileOptions(contentType: 'image/png'),
-        );
       } else {
         // Mobile → File ou XFile
         if (file is XFile) {
-          final fileBytes = await file.readAsBytes();
-          await _db.storage.from(_bucket).uploadBinary(
-            fileName,
-            fileBytes,
-            fileOptions: FileOptions(contentType: 'image/jpeg'),
-          );
+          bytes = await file.readAsBytes();
         } else if (file is File) {
-          await _db.storage.from(_bucket).upload(
-            fileName,
-            file,
-            fileOptions: const FileOptions(contentType: 'image/jpeg'),
-          );
+          bytes = await file.readAsBytes();
         } else {
           throw 'Type de fichier non supporté pour l\'upload mobile';
         }
       }
 
+      // Déterminer le contentType selon la plateforme
+      final contentType = isMobile ? 'image/jpeg' : 'image/png';
+
+      // Upload sur Supabase Storage
+      await _db.storage.from(_bucket).uploadBinary(
+        fileName,
+        bytes,
+        fileOptions: FileOptions(contentType: contentType),
+      );
+
       // Récupérer l'URL publique
       final publicUrl = _db.storage.from(_bucket).getPublicUrl(fileName);
+      debugPrint("Banner image uploaded. Public URL: $publicUrl");
       return publicUrl;
     } catch (e) {
+      debugPrint("Erreur upload banner image: $e");
+      final errorMessage = e.toString().toLowerCase();
+      
+      // Vérifier si l'erreur est due à un bucket manquant
+      if (errorMessage.contains('bucket not found') || 
+          errorMessage.contains('bucket does not exist') ||
+          (errorMessage.contains('not found') && errorMessage.contains('bucket'))) {
+        throw 'Le bucket "banners" n\'existe pas dans Supabase Storage.\n\n'
+            'Veuillez créer le bucket "banners" :\n'
+            '1. Allez dans Supabase > Storage > Buckets\n'
+            '2. Cliquez sur "New bucket"\n'
+            '3. Nom: "banners"\n'
+            '4. Cochez "Public bucket"\n'
+            '5. Cliquez sur "Create bucket"\n\n'
+            'Ou exécutez le SQL dans le fichier supabase_banners_table.sql';
+      }
+      
       throw 'Erreur lors de l\'upload de l\'image : $e';
     }
   }
