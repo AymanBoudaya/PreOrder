@@ -90,28 +90,31 @@ class EditBannerScreen extends StatelessWidget {
               const SizedBox(height: AppSizes.spaceBtwInputFields),
 
               // Type de lien
-              DropdownButtonFormField<String>(
-                value: controller.selectedLinkType.value,
-                decoration: const InputDecoration(
-                  labelText: 'Type de lien',
-                  prefixIcon: Icon(Iconsax.link),
-                ),
-                items: const [
-                  DropdownMenuItem(value: '', child: Text('Aucun lien')),
-                  DropdownMenuItem(value: 'product', child: Text('Produit')),
-                  DropdownMenuItem(value: 'category', child: Text('Catégorie')),
-                  DropdownMenuItem(
-                    value: 'establishment',
-                    child: Text('Établissement'),
+              Obx(() {
+                final currentValue = controller.selectedLinkType.value;
+                return DropdownButtonFormField<String?>(
+                  value: currentValue.isEmpty ? null : currentValue,
+                  decoration: const InputDecoration(
+                    labelText: 'Type de lien',
+                    prefixIcon: Icon(Iconsax.link),
                   ),
-                ],
-                onChanged: (value) {
-                  controller.selectedLinkType.value = value ?? '';
-                  if (value != banner.linkType) {
-                    controller.selectedLinkId.value = ''; // Reset selection
-                  }
-                },
-              ),
+                  items: const [
+                    DropdownMenuItem(value: null, child: Text('Aucun lien')),
+                    DropdownMenuItem(value: 'product', child: Text('Produit')),
+                    DropdownMenuItem(value: 'category', child: Text('Catégorie')),
+                    DropdownMenuItem(
+                      value: 'establishment',
+                      child: Text('Établissement'),
+                    ),
+                  ],
+                  onChanged: (value) {
+                    controller.selectedLinkType.value = value ?? '';
+                    if (value != banner.linkType) {
+                      controller.selectedLinkId.value = ''; // Reset selection
+                    }
+                  },
+                );
+              }),
               const SizedBox(height: AppSizes.spaceBtwInputFields),
 
               // Sélection du lien selon le type
@@ -307,13 +310,25 @@ class EditBannerScreen extends StatelessWidget {
       if (linkType.isEmpty) return const SizedBox.shrink();
 
       if (linkType == 'product') {
+        final products = controller.products;
+        if (products.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text('Aucun produit disponible', style: TextStyle(color: Colors.grey)),
+          );
+        }
+        
+        final selectedValue = controller.selectedLinkId.value;
+        final isValidValue = selectedValue.isNotEmpty && 
+            products.any((p) => p.id == selectedValue);
+        
         return DropdownButtonFormField<String>(
-          value: controller.selectedLinkId.value,
+          value: isValidValue ? selectedValue : null,
           decoration: const InputDecoration(
             labelText: 'Sélectionner un produit',
             prefixIcon: Icon(Iconsax.shop),
           ),
-          items: controller.products.map((product) {
+          items: products.map((product) {
             return DropdownMenuItem(
               value: product.id,
               child: Text(product.name),
@@ -324,13 +339,25 @@ class EditBannerScreen extends StatelessWidget {
           },
         );
       } else if (linkType == 'category') {
+        final categories = controller.categories;
+        if (categories.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text('Aucune catégorie disponible', style: TextStyle(color: Colors.grey)),
+          );
+        }
+        
+        final selectedValue = controller.selectedLinkId.value;
+        final isValidValue = selectedValue.isNotEmpty && 
+            categories.any((c) => c.id == selectedValue);
+        
         return DropdownButtonFormField<String>(
-          value: controller.selectedLinkId.value,
+          value: isValidValue ? selectedValue : null,
           decoration: const InputDecoration(
             labelText: 'Sélectionner une catégorie',
             prefixIcon: Icon(Iconsax.category),
           ),
-          items: controller.categories.map((category) {
+          items: categories.map((category) {
             return DropdownMenuItem(
               value: category.id,
               child: Text(category.name),
@@ -341,15 +368,25 @@ class EditBannerScreen extends StatelessWidget {
           },
         );
       } else if (linkType == 'establishment') {
+        final establishments = controller.establishments.where((e) => e.id != null).toList();
+        if (establishments.isEmpty) {
+          return const Padding(
+            padding: EdgeInsets.all(8.0),
+            child: Text('Aucun établissement disponible', style: TextStyle(color: Colors.grey)),
+          );
+        }
+        
+        final selectedValue = controller.selectedLinkId.value;
+        final isValidValue = selectedValue.isNotEmpty && 
+            establishments.any((e) => e.id == selectedValue);
+        
         return DropdownButtonFormField<String>(
-          value: controller.selectedLinkId.value,
+          value: isValidValue ? selectedValue : null,
           decoration: const InputDecoration(
             labelText: 'Sélectionner un établissement',
             prefixIcon: Icon(Iconsax.home),
           ),
-          items: controller.establishments
-              .where((e) => e.id != null)
-              .map((establishment) {
+          items: establishments.map((establishment) {
             return DropdownMenuItem(
               value: establishment.id!,
               child: Text(establishment.name),
